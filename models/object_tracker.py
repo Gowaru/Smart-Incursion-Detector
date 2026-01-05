@@ -33,9 +33,6 @@ from utils.performance import (
 
 import supervision as sv
 
-
-import supervision as sv
-
 class ObjectTracker:
     """
     Système principal de détection et tracking d'objets en temps réel OPTIMISÉ avec SUPERVISION.
@@ -63,12 +60,12 @@ class ObjectTracker:
         print(f"\n🤖 Chargement du modèle YOLO: {model_path}...")
         self.model = YOLO(model_path)
         
-        if config.USE_HALF_PRECISION:
+        if config.USE_HALF_PRECISION and config.DEVICE != 'cpu':
             try:
-                self.model.to('cuda').half()
-                print("✅ Half-precision (FP16) activé")
-            except:
-                pass
+                self.model.to(config.DEVICE).half()
+                print(f"✅ Half-precision (FP16) activé sur {config.DEVICE}")
+            except Exception as e:
+                print(f"⚠️  Impossible d'activer FP16: {e}")
         print(f"✅ Modèle chargé avec succès\n")
         
         # Dimensions vidéo
@@ -150,11 +147,18 @@ class ObjectTracker:
         # Conversion directe Ultralytics -> Supervision
         detections = sv.Detections.from_ultralytics(results[0])
         
-        # Filtrage par classes cibles
+        # 1. Filtrage par classes cibles
         detections = detections[np.isin(detections.class_id, self.target_class_ids)]
         
-        # Filtrage par confiance
-        detections = detections[detections.confidence >= config.CONFIDENCE_THRESHOLD]
+        # 2. Filtrage adaptatif par classe (beaucoup plus précis)
+        mask = []
+        for class_id, confidence in zip(detections.class_id, detections.confidence):
+            class_name = self.class_names.get(class_id, "unknown")
+            # Seuil spécifique ou seuil global par défaut
+            threshold = config.ADAPTIVE_CONFIDENCE.get(class_name, config.CONFIDENCE_THRESHOLD)
+            mask.append(confidence >= threshold)
+        
+        detections = detections[np.array(mask, dtype=bool)]
         
         # Mise à l'échelle des coordonnées (xyxy)
         if scale_x != 1.0 or scale_y != 1.0:
@@ -276,7 +280,8 @@ class ObjectTracker:
                         persist=True,
                         tracker=config.TRACKER_TYPE,
                         verbose=False,
-                        device=config.DEVICE
+                        device=config.DEVICE,
+                        imgsz=config.PROCESSING_WIDTH
                     )
                     
                     # Conversion vers Supervision

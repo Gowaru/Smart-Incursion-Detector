@@ -13,17 +13,17 @@ MODEL_NAME = "yolo11n.pt"
 
 # Seuil de confiance minimal pour la détection (0.0 à 1.0)
 # Plus élevé = moins de faux positifs, mais peut manquer des objets
-CONFIDENCE_THRESHOLD = 0.35
+CONFIDENCE_THRESHOLD = 0.15  # Seuil de base très bas pour laisser passer les sacs vers le filtrage adaptatif
 
 # Seuil IOU (Intersection Over Union) pour le NMS (Non-Maximum Suppression)
-IOU_THRESHOLD = 0.5
+IOU_THRESHOLD = 0.3   # Plus bas pour mieux détecter les objets chevauchants (ex: sac sur le dos)
 
 # ============================================================================
 # CLASSES CIBLES
 # ============================================================================
 
 # Classes d'objets à détecter (noms COCO)
-TARGET_CLASSES = ["person", "car", "motorbike", "backpack", "handbag", "cell phone"]
+TARGET_CLASSES = ["person", "car", "motorbike", "backpack", "handbag", "suitcase"]
 
 # Mapping des IDs COCO vers les noms de classes
 # COCO dataset: 0=person, 2=car, 3=motorbike, etc.
@@ -33,7 +33,7 @@ CLASS_IDS = {
     3: "motorbike",
     24: "backpack",
     26: "handbag",
-    67: "cell phone"
+    28: "suitcase"
 }
 
 # Mapping inverse pour faciliter la recherche
@@ -113,7 +113,7 @@ VERBOSE = False
 
 # Device à utiliser: 'cpu', 'cuda', '0', '1', etc.
 # None = détection automatique
-DEVICE = None
+DEVICE = 'cpu'
 
 # FPS cible pour l'affichage (None = pas de limitation)
 TARGET_FPS = None
@@ -130,15 +130,15 @@ FRAME_BUFFER_SIZE = 2
 
 # Skip frames pour améliorer le FPS (traiter 1 frame sur N)
 # 1 = traiter toutes les frames, 2 = une sur deux, etc.
-FRAME_SKIP = 2
+FRAME_SKIP = 8  # Plus espacé pour garantir la fluidité CPU (IA ~4 fois/sec)
 
 # Utiliser un modèle demi-précision (FP16) si GPU disponible
-USE_HALF_PRECISION = True
+USE_HALF_PRECISION = False
 
 # Résolution de traitement (différente de l'affichage)
 # Plus petit = plus rapide, mais moins précis
-PROCESSING_WIDTH = 960  # qHD (960x540) Compromis
-PROCESSING_HEIGHT = 540
+PROCESSING_WIDTH = 1024  # Compromis idéal HD/Vitesse sur CPU
+PROCESSING_HEIGHT = 576
 
 # ============================================================================
 # OPTIMISATIONS DE PRÉCISION
@@ -150,12 +150,12 @@ ENABLE_KALMAN_FILTER = True
 # Seuils de confiance adaptatifs par classe
 # Seuils de confiance adaptatifs par classe
 ADAPTIVE_CONFIDENCE = {
-    "person": 0.40,      # Standard
-    "car": 0.50,         # Standard
-    "motorbike": 0.45,   # Standard
-    "backpack": 0.15,    # Seuil minimal
-    "handbag": 0.15,     # Seuil minimal
-    "cell phone": 0.15   # Seuil minimal
+    "person": 0.50,      # Augmenté pour éviter les faux positifs
+    "car": 0.60,         # Augmenté
+    "motorbike": 0.55,   # Augmenté
+    "backpack": 0.15,    # Sensibilité maximale pour les sacs
+    "handbag": 0.15,     # Sensibilité maximale
+    "suitcase": 0.15     # Sensibilité maximale
 }
 
 # Nombre minimum de frames consécutives pour valider une détection
