@@ -1,65 +1,77 @@
 # 🎯 Smart Incursion Detector (YOLO11 + Supervision)
 
-Système avancé de détection d'intrusions optimisé pour la détection d'objets difficiles (sacs, valises) sur du matériel grand public.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
+[![YOLO11](https://img.shields.io/badge/Model-YOLO11-red.svg)](https://github.com/ultralytics/ultralytics)
+[![Supervision](https://img.shields.io/badge/Library-Supervision-green.svg)](https://github.com/roboflow/supervision)
+
+Système intelligent de vidéosurveillance et de détection d'intrusions optimisé pour la détection d'objets complexes (sacs, bagages, personnes) à longue portée.
 
 ---
 
-## �️ Technologies Utilisées
-Le projet repose sur un écosystème de pointe en Computer Vision :
-- **IA Core** : [YOLO11 par Ultralytics](https://github.com/ultralytics/ultralytics) (Modèles Nano/Small)
-- **Visualisation & Analyse** : [Supervision par Roboflow](https://github.com/roboflow/supervision)
-- **Tracking Logic** : **ByteTrack** (pour la persistance des IDs d'objets)
-- **Traitement d'Image** : **OpenCV** (gestion des flux vidéo et interface fenêtrée)
-- **Backend Numérique** : **PyTorch** & **NumPy**
-- **Optimisation** : Algorithme de filtrage de Kalman et Multi-threading.
+## ✨ Fonctionnalités Clés
+- **Détection Multi-Classes** : Optimisé pour `person`, `car`, `motorbike`, `backpack`, `handbag`, `suitcase`.
+- **Analyse Longue Portée** : Traitement en haute résolution (HD) pour identifier les objets lointains.
+- **Rendu Fluide (Decoupled Rendering)** : Maintien de 30 FPS pour l'affichage tout en effectuant l'analyse IA en arrière-plan.
+- **Tracking Robuste** : Utilisation de **ByteTrack** et filtres de Kalman pour la persistance des objets.
+- **Zones d'Alerte Dynamiques** : Déclenchement d'alertes visuelles et logs lors de l'entrée dans une zone protégée.
+- **Visualisation de Données** : Heatmaps d'activité, affichage des trajectoires et graphiques de performance FPS.
 
 ---
 
-## 🚀 Utilisation
+## 🛠️ Stack Technique
+- **IA** : YOLO11 (Ultralytics) - Modèles Nano (`yolo11n.pt`).
+- **Vision Library** : Supervision (Roboflow) pour l'annotation et le traitement des détections.
+- **Tracking** : ByteTrack (Yaml config).
+- **Core** : OpenCV, PyTorch, NumPy.
+
+---
+
+## 🚧 Défis Techniques & Solutions
+
+### 1. Optimisation CPU (Le Triangle Impossible)
+**Défi** : Obtenir de la haute résolution (720p) pour voir loin, tout en restant fluide (30 FPS) sur un processeur sans accélération GPU stable.
+**Solution** : Mise en place du **Decoupled Rendering**. L'affichage vidéo tourne à plein régime, tandis que l'IA analyse une image sur 12 (`FRAME_SKIP = 12`).
+
+### 2. Détection des Sacs (Objets Superposés)
+**Défi** : L'IA confond souvent les sacs avec la personne qui les porte ou les ignore à cause du chevauchement (NMS).
+**Solution** : Abaissement du seuil d'exclusion **IOU à 0.3** et mise en place de **Seuils Adaptatifs par Classe** (Bags @ 0.25 vs People @ 0.50).
+
+### 3. Filtrage des Faux Positifs (Pieds vs Valises)
+**Défi** : À longue distance, la forme des chaussures peut être interprétée comme une petite valise.
+**Solution** : Calibration fine des seuils de confiance : `Suitcase` relevé à **0.45** pour exiger une certitude quasi-totale du modèle.
+
+---
+
+## 🚀 Guide de Démarrage
+
+### Installation
+1. Clonez le dépôt.
+2. Installez les dépendances :
+```bash
+pip install -r requirements.txt
+```
 
 ### Lancement
-Exécutez la commande suivante dans votre terminal :
 ```bash
 python main.py
 ```
 
-### Interface Interactive
-Au démarrage, un menu CLI vous permet de choisir :
-1.  **Webcam** : Flux en temps réel.
-2.  **Fichier Vidéo** : Chemin vers un fichier local (.mp4, .avi, etc.).
-
-### Raccourcis Clavier (Pendant l'exécution)
+### Contrôles In-App
 | Touche | Action |
 | :--- | :--- |
-| `H` | Activer/Désactiver la **Heatmap** d'activité |
-| `Q` | Quitter proprement le système |
-| `Esc` | Quitter l'affichage vidéo |
+| `H` | Afficher / Masquer la **Heatmap** d'activité |
+| `Q` ou `Esc` | Quitter proprement le système |
 
 ---
 
-## 🚧 Défis et Difficultés rencontrés
-
-### 1. Le "Triangle Impossible" (CPU-only)
-Sur CPU, nous avons dû équilibrer trois facteurs contradictoires :
-- **Haute Résolution** (720p) vs **Précision** (YOLO11s) vs **Fluidité** (30 FPS).
-- **Solution** : Utilisation du **Decoupled Rendering** (Affichage 30 FPS, IA traitée 1 image sur 8).
-
-### 2. Détection des Sacs et Mobilité
-Les sacs à dos et sacs à main sont difficiles car souvent collés à une personne.
-- **Solution** : Abaissement agressif du seuil **IOU (0.3)** et mise en place de **seuils de confiance adaptatifs** (très sensibles pour les sacs à 0.15).
-
-### 3. Instabilité de la Carte Graphique (Quadro T1000)
-- **Problème** : Des erreurs de types de données (Half vs Float) ont forcé le retour au CPU.
-- **Leçon** : Importance de la compatibilité exacte entre PyTorch-CUDA et les drivers NVIDIA.
-
----
-
-## ⚙️ Configuration Recommandée (`config/config.py`)
-- **Modèle** : `yolo11n.pt`
-- **Résolution IA** : `1024x576`
-- **Classes cibles** : `person`, `car`, `motorbike`, `backpack`, `handbag`, `suitcase`.
+## ⚙️ Configuration (`config/config.py`)
+Le fichier de configuration centralise tous les paramètres critiques :
+- `MODEL_NAME` : Choix du modèle (n, s, m, l, x).
+- `PROCESSING_WIDTH` : Détermine la portée de détection (1280 recommandée pour la distance).
+- `ADAPTIVE_CONFIDENCE` : Réglage fin de la sensibilité pour chaque type d'objet.
 
 ---
 
 ## 🙏 Remerciements
-- Un grand merci à **Ultralytics** pour leur modèle YOLO11 exceptionnel et leur écosystème open-source qui rend ces technologies accessibles.
+- **Ultralytics** : Pour leur travail remarquable sur YOLO11.
+- **Roboflow** : Pour la bibliothèque Supervision qui facilite l'analyse visuelle.

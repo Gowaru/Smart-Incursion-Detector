@@ -130,15 +130,15 @@ FRAME_BUFFER_SIZE = 2
 
 # Skip frames pour améliorer le FPS (traiter 1 frame sur N)
 # 1 = traiter toutes les frames, 2 = une sur deux, etc.
-FRAME_SKIP = 8  # Plus espacé pour garantir la fluidité CPU (IA ~4 fois/sec)
+FRAME_SKIP = 12 # Plus élevé pour compenser la haute résolution sur CPU (Fluidité Max)
 
 # Utiliser un modèle demi-précision (FP16) si GPU disponible
 USE_HALF_PRECISION = False
 
 # Résolution de traitement (différente de l'affichage)
 # Plus petit = plus rapide, mais moins précis
-PROCESSING_WIDTH = 1024  # Compromis idéal HD/Vitesse sur CPU
-PROCESSING_HEIGHT = 576
+PROCESSING_WIDTH = 1280  # Augmenté pour la détection à distance (plus de pixels par objet)
+PROCESSING_HEIGHT = 720
 
 # ============================================================================
 # OPTIMISATIONS DE PRÉCISION
@@ -153,9 +153,9 @@ ADAPTIVE_CONFIDENCE = {
     "person": 0.50,      # Augmenté pour éviter les faux positifs
     "car": 0.60,         # Augmenté
     "motorbike": 0.55,   # Augmenté
-    "backpack": 0.15,    # Sensibilité maximale pour les sacs
-    "handbag": 0.15,     # Sensibilité maximale
-    "suitcase": 0.15     # Sensibilité maximale
+    "backpack": 0.25,    # Équilibre sensibilité/faux positifs
+    "handbag": 0.25,     # Équilibre
+    "suitcase": 0.45     # Augmenté pour éviter la confusion avec les pieds
 }
 
 # Nombre minimum de frames consécutives pour valider une détection
