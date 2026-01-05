@@ -9,28 +9,31 @@ Tous les paramètres du système sont définis ici pour faciliter la maintenance
 
 # Nom du modèle YOLOv8 à utiliser (n=nano, s=small, m=medium, l=large, x=extra-large)
 # yolov8n.pt est le plus rapide, idéal pour le temps réel
-MODEL_NAME = "yolov8n.pt"
+MODEL_NAME = "yolo11n.pt"
 
 # Seuil de confiance minimal pour la détection (0.0 à 1.0)
 # Plus élevé = moins de faux positifs, mais peut manquer des objets
-CONFIDENCE_THRESHOLD = 0.5
+CONFIDENCE_THRESHOLD = 0.35
 
 # Seuil IOU (Intersection Over Union) pour le NMS (Non-Maximum Suppression)
-IOU_THRESHOLD = 0.45
+IOU_THRESHOLD = 0.5
 
 # ============================================================================
 # CLASSES CIBLES
 # ============================================================================
 
 # Classes d'objets à détecter (noms COCO)
-TARGET_CLASSES = ["person", "car", "motorbike"]
+TARGET_CLASSES = ["person", "car", "motorbike", "backpack", "handbag", "cell phone"]
 
 # Mapping des IDs COCO vers les noms de classes
 # COCO dataset: 0=person, 2=car, 3=motorbike, etc.
 CLASS_IDS = {
     0: "person",
     2: "car",
-    3: "motorbike"
+    3: "motorbike",
+    24: "backpack",
+    26: "handbag",
+    67: "cell phone"
 }
 
 # Mapping inverse pour faciliter la recherche
@@ -93,7 +96,10 @@ TEXT_BG_COLOR = (0, 0, 0)     # Noir
 
 # Type de tracker à utiliser avec YOLO
 # Options: 'botsort', 'bytetrack' 
-TRACKER_TYPE = "bytetrack.yaml"
+# Type de tracker à utiliser avec YOLO
+# Options: 'botsort', 'bytetrack' 
+import os
+TRACKER_TYPE = os.path.abspath("bytetrack.yaml")
 
 # Persistance des tracks (nombre de frames avant de perdre un ID)
 TRACK_BUFFER = 30
@@ -124,15 +130,15 @@ FRAME_BUFFER_SIZE = 2
 
 # Skip frames pour améliorer le FPS (traiter 1 frame sur N)
 # 1 = traiter toutes les frames, 2 = une sur deux, etc.
-FRAME_SKIP = 3
+FRAME_SKIP = 2
 
 # Utiliser un modèle demi-précision (FP16) si GPU disponible
 USE_HALF_PRECISION = True
 
 # Résolution de traitement (différente de l'affichage)
 # Plus petit = plus rapide, mais moins précis
-PROCESSING_WIDTH = 640  # None pour utiliser résolution originale
-PROCESSING_HEIGHT = 360
+PROCESSING_WIDTH = 960  # qHD (960x540) Compromis
+PROCESSING_HEIGHT = 540
 
 # ============================================================================
 # OPTIMISATIONS DE PRÉCISION
@@ -142,10 +148,14 @@ PROCESSING_HEIGHT = 360
 ENABLE_KALMAN_FILTER = True
 
 # Seuils de confiance adaptatifs par classe
+# Seuils de confiance adaptatifs par classe
 ADAPTIVE_CONFIDENCE = {
-    "person": 0.45,      # Plus permissif pour personnes
-    "car": 0.55,         # Plus strict pour voitures
-    "motorbike": 0.50    # Intermédiaire pour motos
+    "person": 0.40,      # Standard
+    "car": 0.50,         # Standard
+    "motorbike": 0.45,   # Standard
+    "backpack": 0.15,    # Seuil minimal
+    "handbag": 0.15,     # Seuil minimal
+    "cell phone": 0.15   # Seuil minimal
 }
 
 # Nombre minimum de frames consécutives pour valider une détection
