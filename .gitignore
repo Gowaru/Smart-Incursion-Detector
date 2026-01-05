@@ -23,7 +23,7 @@ ENV/
 Thumbs.db
 
 # YOLO
-yolov*.pt
+yolo*.pt
 runs/
 weights/
 
